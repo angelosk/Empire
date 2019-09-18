@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [[ $EUID -ne 0 ]]; then
+   echo " [!]This script must be run as root" 1>&2
+   exit 1
+fi
+
 IFS='/' read -a array <<< pwd
 
 if [[ "$(pwd)" != *setup ]]
@@ -13,7 +18,7 @@ then
 	rm ../data/empire.db
 fi
 
-./setup_database.py
+python ./setup_database.py
 cd ..
 
 # remove the debug file if it exists
@@ -28,5 +33,9 @@ then
 	rm -rf ./downloads/
 fi
 
-# start up Empire
-./empire
+# start up Empire if not in docker otherwise return
+if [ -f /.dockerenv ]; then
+    echo " [*] Empire reset complete returning back to Docker"
+else
+    ./empire
+fi
